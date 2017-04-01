@@ -46,3 +46,31 @@ void list_add_tail(struct list_head *new, struct list_head *head)
         __list_add(new, head->prev, head);
 }
 
+/**
+* Delete a list entry by making the prev/next entries
+* point to each other.
+*
+* This is only for internal list manipulation where we know
+* the prev/next entries already!
+*/
+void __list_del(struct list_head * prev, struct list_head * next)
+{
+       next->prev = prev;           
+       prev->next = next;
+}
+
+/**
+ * list_del - deletes entry from list.
+ * @entry: the element to delete from the list.
+ * Note: list_empty() on entry does not return true after this, the entry is
+ * in an undefined state.
+ */
+void list_del(struct list_head * entry)
+{
+       __list_del(entry->prev, entry->next);
+       entry->next = NULL;
+       entry->prev = NULL;
+}
+
+
+

@@ -1,3 +1,9 @@
+/*   log.h     all API and data structures about log and logging
+*              most of ideas are drived from linux kernel source.
+*
+*    Copyright (c):     (2017)  Arash Golgol (arash.golgol@gmail.com)                  
+*/
+
 #ifndef	_LOG_H_
 #define _LOG_H_
 
@@ -20,6 +26,12 @@ struct  timesec {
         unsigned int    m_sec;
 };
 
+/** struct samplespec: about 'How offten' take sample (sample_interval)
+*                      and 'How many' sample to take
+*   @sample_interavl:  time between each sample. in milisecond resolution
+*   @nr_sample:        how many sample is needed. it can be (-1) for 
+*                      infinite sampling.
+*/
 struct  samplespec {
         struct   timesec sample_interval;
         int      nr_samples;

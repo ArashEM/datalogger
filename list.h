@@ -24,10 +24,12 @@ struct list_head {
 
 void __list_add(struct list_head * new, struct list_head * prev, 
                 struct list_head * next);
-
 void list_add(struct list_head *new, struct list_head *head);
-
 void list_add_tail(struct list_head *new, struct list_head *head);
+
+
+void __list_del(struct list_head * prev, struct list_head * next);
+void list_del(struct list_head * entry);
 
 #define offsetof(type, member) \
         (size_t)(&(((type *)0)->member) )
