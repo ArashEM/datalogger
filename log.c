@@ -60,6 +60,12 @@ int register_logger(struct logger * new)
        if( (!new->log.sampling_rate.sample_interval.sec) &&
            (!new->log.sampling_rate.sample_interval.m_sec))
                return -EINVAL;
+       /* initiate tick value. interval of sampling must be at 
+          last '1000/TICK_RATE_HZ' */
+       new->nr_tick = __calculate_tick(&new->log.sampling_rate);
+       if(!new->nr_tick)
+               return -EINVAL;
+
        /* initiate data capture sub system */
        if( !new->log.data.init_capture(new->log.data.private_data) )
                return -EIO;
@@ -68,7 +74,6 @@ int register_logger(struct logger * new)
        if( !new->log.storage_media.init_media(new->log.storage_media.storage_data) )
                return -EIO;
 
-       /* initiate tick value */
 
        /* add new to logger_running_list */
        /* TODO: shared resource access */
@@ -78,11 +83,11 @@ int register_logger(struct logger * new)
 }
 
 
-void   _init_logger_list(struct list_head * list, struct logger * array, int array_size)
+void   __init_logger_list(struct list_head * list, struct logger * array, int array_size)
 {
        int i;
        for(i=0; i<array_size; i++){
-                array->tick = (tick_t)i; 
+                array->nr_tick = (tick_t)i; 
                 list_add(&array->l_list, list);
                 array++;
        }
@@ -100,7 +105,7 @@ int init_logger(void)
      memset((void *)logger_array, 0, NR_LOGGER * sizeof(struct logger));
 
      /* creat linked list of free logger */
-     _init_logger_list(&logger_free_list, logger_array, NR_LOGGER);
+     __init_logger_list(&logger_free_list, logger_array, NR_LOGGER);
 
      return 0;
 }
@@ -158,10 +163,19 @@ int logger_task(void)
 }
 
 
+/** __calculate_tick(): how many tick must passed between each sampling?
+*
+*   @interval:          pinter to sample descriptor structure
+*/
+tick_t __calculate_tick(struct samplespec * interval)
+{
+       int msec;
+       msec = 1000 * (interval->sample_interval.sec) + interval->sample_interval.m_sec;
+       return (tick_t)(msec * TICK_RATE_HZ / 1000 );
+}
 /**  misc_test()
 *    used for log.c interal variable test
 */
-
 void misc_test(void * parg)
 {
       struct list_head * pos;
@@ -169,7 +183,7 @@ void misc_test(void * parg)
       int i = 0;
       list_for_each(pos, &logger_free_list){
             logger = list_entry(pos, struct logger, l_list);
-            printf("tick = %d , i = %d\n", (int)logger->tick, i++);
+            printf("tick = %d , i = %d\n", (int)logger->nr_tick, i++);
       }
 
 }

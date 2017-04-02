@@ -95,7 +95,8 @@ struct logger {
        const char *       name;
        struct log         log;
        struct logger_stat stat;
-       tick_t             tick;
+       tick_t             nr_tick;
+       tick_t             counter;
        struct list_head   l_list;
        
 };
@@ -113,7 +114,8 @@ void   logger_free(struct logger *);
 /**
 *   internal functions
 */
-void   _init_logger_list(struct list_head * list, struct logger * array, int array_size);
+void   __init_logger_list(struct list_head * list, struct logger * array, int array_size);
+tick_t __calculate_tick(struct samplespec * interval);
 void   misc_test(void *parg);
 
 #endif
