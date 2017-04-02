@@ -54,7 +54,7 @@ void   _init_logger_list(struct list_head * list, struct logger * array, int arr
 {
        int i;
        for(i=0; i<array_size; i++){
-                /* array->tick = (tick_t)i; */
+                array->tick = (tick_t)i; 
                 list_add(&array->l_list, list);
                 array++;
        }
@@ -77,6 +77,59 @@ int init_logger(void)
      return 0;
 }
 
+/** logger_alloc(): get a new logger struct from logger_free_list
+*   return:         pointer to allocated logger or NULL if it's not
+*                   available.
+*
+*   TODO:           this function access SHARED resource. consider 
+*                   locking mechanism.
+*/
+struct logger * logger_alloc(void)
+{
+       struct logger * tmp;
+      
+       if(list_empty(&logger_free_list))
+               return NULL;
+       /* get first logger element in list */
+       tmp = list_first_entry(&logger_free_list, struct logger, l_list);      
+
+       /* delete allocated logger from free list */
+       list_del(&tmp->l_list);
+       
+       /* safty issue: clean tmp before return*/
+       memset((void *)tmp, 0, sizeof(struct logger));
+
+       return tmp;            
+}
+
+/** logger_free(): add logger struct to logger_free_list
+*   @unused:       pointer to logger to attach to list   
+*
+*   NOTE:          @unused is valid pointer after calling logger_free()
+*                  but it can be used by other thread of execution by call
+*                  of logger_alloc(). So it's user responsibility not to
+*                  use it after this call.
+*
+*   TODO:          SHARED resource access.
+*/
+void logger_free(struct logger * unused)
+{
+       if(!unused)
+               return;
+        
+       /* add to logger_free_list */
+       list_add(&unused->l_list, &logger_free_list);
+}
+
+/** logger_task()
+*
+*/
+int logger_task(void)
+{
+       return 0;
+}
+
+
 /**  misc_test()
 *    used for log.c interal variable test
 */
@@ -86,7 +139,7 @@ void misc_test(void * parg)
       struct list_head * pos;
       struct logger    * logger;
       int i = 0;
-      list_for_each_prev(pos, &logger_free_list){
+      list_for_each(pos, &logger_free_list){
             logger = list_entry(pos, struct logger, l_list);
             printf("tick = %d , i = %d\n", (int)logger->tick, i++);
       }

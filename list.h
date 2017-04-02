@@ -31,6 +31,9 @@ void list_add_tail(struct list_head *new, struct list_head *head);
 void __list_del(struct list_head * prev, struct list_head * next);
 void list_del(struct list_head * entry);
 
+int list_empty(struct list_head * head);
+
+
 #define offsetof(type, member) \
         (size_t)(&(((type *)0)->member) )
 
@@ -46,6 +49,16 @@ void list_del(struct list_head * entry);
 #define list_entry(ptr, type, member) \
         containter_of(ptr, type, member)
 
+/**
+ * list_first_entry - get the first element from a list
+ * @ptr:        the list head to take the element from.
+ * @type:       the type of the struct this is embedded in.
+ * @member:     the name of the list_head within the struct.
+ *
+ * Note, that list is expected to be not empty.
+ */
+#define list_first_entry(ptr, type, member) \
+        list_entry((ptr)->next, type, member)
 
 /**
  * list_for_each        -       iterate over a list

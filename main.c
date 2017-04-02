@@ -10,8 +10,15 @@
 
 int main(int argc, char * argv[])
 {
+        struct logger * tmp;
 	init_logger();
 	printf("sizeof(logger) = %zd\n",sizeof(struct logger));
 	misc_test(NULL);
+        printf("----------------------------------------------\n");
+        tmp = logger_alloc();
+        misc_test(NULL);
+        printf("----------------------------------------------\n");
+        logger_free(tmp);
+        misc_test(NULL);
 	exit(EXIT_SUCCESS);
 }

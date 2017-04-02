@@ -1,5 +1,5 @@
 /**  
-*        liked list implementation based on
+*        linked list implementation based on
 *        linux kernel include/linux/list.h
 *
 */
@@ -72,5 +72,13 @@ void list_del(struct list_head * entry)
        entry->prev = NULL;
 }
 
+/**
+ * list_empty - tests whether a list is empty
+ * @head: the list to test.
+ */
+int list_empty(struct list_head * head)
+{
+      return ((head->next == head) && (head->prev == head));
+}
 
 

@@ -106,7 +106,7 @@ struct logger {
 int    init_logger(void);
 int    register_logger(struct logger *);
 int    unregister_logger(struct logger *);
-int    logger_task(struct list_head * log_list);
+int    logger_task(void);
 struct logger * logger_alloc(void);
 void   logger_free(struct logger *);
 
