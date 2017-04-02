@@ -73,7 +73,7 @@ struct  log_data {
 */
 struct storage {
        char *   name;
-       int      (*init_media)(struct log_data * data, void * storage_data);
+       int      (*init_media)(void * storage_data);
        int      (*save_data)(struct log_data * data, void * storage_data);
        int      (*close_media)(struct log_data *data, void * storage_data);
        void *   storage_data;
@@ -114,8 +114,6 @@ void   logger_free(struct logger *);
 *   internal functions
 */
 void   _init_logger_list(struct list_head * list, struct logger * array, int array_size);
-int    _add_logger(struct list_head * list, struct logger *);
-int    _remove_logger(struct list_head * list, struct logger *);
 void   misc_test(void *parg);
 
 #endif

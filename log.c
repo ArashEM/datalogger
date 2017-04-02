@@ -5,11 +5,13 @@
 *   Copyright (C): arash golgol (2017)
 */
 
+#include <stdio.h>
 #include <string.h>
+
+#include "noerr.h"
 #include "log.h"
 #include "list.h"
 #include "config.h"
-#include <stdio.h>
 
 /**
 *   main array of loggers. it's only accessed via log.c functions
@@ -46,6 +48,32 @@ int register_logger(struct logger * new)
          3- calculate tick value based on CPUFreq and sampling_rate
          4- add 'new' to logger_running_list
     */
+       /* check for proper initialization */
+       if( (!new->log.data.init_capture) || (!new->log.data.get_data))
+               return -EINVAL;
+       if( !new->log.data.buff )
+               return -ENOMEM;
+       if( (!new->log.storage_media.init_media)  ||
+           (!new->log.storage_media.save_data)   ||
+           (!new->log.storage_media.close_media) )
+               return -EINVAL;
+       if( (!new->log.sampling_rate.sample_interval.sec) &&
+           (!new->log.sampling_rate.sample_interval.m_sec))
+               return -EINVAL;
+       /* initiate data capture sub system */
+       if( !new->log.data.init_capture(new->log.data.private_data) )
+               return -EIO;
+
+       /* initiate media to save data */
+       if( !new->log.storage_media.init_media(new->log.storage_media.storage_data) )
+               return -EIO;
+
+       /* initiate tick value */
+
+       /* add new to logger_running_list */
+       /* TODO: shared resource access */
+       list_add(&new->l_list, &logger_free_list);
+       
     return 0;
 }
 
