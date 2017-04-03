@@ -16,7 +16,7 @@ int main(int argc, char * argv[])
         sm.sample_interval.sec   = 0 ;
 
 	tick = __calculate_tick(&sm);
-	printf("tick = %d\n",tick);
+	printf("tick = %ld\n",(unsigned long int)tick);
 
 	exit(EXIT_SUCCESS);
 }

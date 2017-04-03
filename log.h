@@ -11,7 +11,7 @@
 
 #include "list.h"
 
-typedef unsigned int tick_t;
+typedef unsigned long long int tick_t;
 typedef unsigned int atomic_t;
 
 
@@ -95,7 +95,7 @@ struct logger {
        const char *       name;
        struct log         log;
        struct logger_stat stat;
-       tick_t             nr_tick;
+       tick_t             nr_ticks;
        tick_t             counter;
        struct list_head   l_list;
        
@@ -112,10 +112,17 @@ struct logger * logger_alloc(void);
 void   logger_free(struct logger *);
 
 /**
+*  general MACROs
+*/
+#define LOG_BUG(x) 
+
+/**
 *   internal functions
 */
 void   __init_logger_list(struct list_head * list, struct logger * array, int array_size);
 tick_t __calculate_tick(struct samplespec * interval);
+int    __log_get_data(struct log *);
+int    __log_save_data(struct log *);
 void   misc_test(void *parg);
 
 #endif

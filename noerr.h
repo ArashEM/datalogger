@@ -1,4 +1,6 @@
 /** noerr.h      error number related ot data logger faramework
+*                based on idea of errno.h from glibc
+*                /usr/include/asm-generic/errno-base.h
 * 
 *   Copyright(c):   (2017) Arash Golgol (arash.golgol@gmail.com)
 *

@@ -61,10 +61,13 @@ int register_logger(struct logger * new)
            (!new->log.sampling_rate.sample_interval.m_sec))
                return -EINVAL;
        /* initiate tick value. interval of sampling must be at 
-          last '1000/TICK_RATE_HZ' */
-       new->nr_tick = __calculate_tick(&new->log.sampling_rate);
-       if(!new->nr_tick)
+          least '1000/TICK_RATE_HZ' */
+       new->nr_ticks = __calculate_tick(&new->log.sampling_rate);
+       if(!new->nr_ticks)
                return -EINVAL;
+      
+       /* initiate counter to nr_tick */
+       new->counter = new->nr_ticks;
 
        /* initiate data capture sub system */
        if( !new->log.data.init_capture(new->log.data.private_data) )
@@ -77,7 +80,7 @@ int register_logger(struct logger * new)
 
        /* add new to logger_running_list */
        /* TODO: shared resource access */
-       list_add(&new->l_list, &logger_free_list);
+       list_add(&new->l_list, &logger_running_list);
        
     return 0;
 }
@@ -87,7 +90,7 @@ void   __init_logger_list(struct list_head * list, struct logger * array, int ar
 {
        int i;
        for(i=0; i<array_size; i++){
-                array->nr_tick = (tick_t)i; 
+                array->nr_ticks = (tick_t)i; 
                 list_add(&array->l_list, list);
                 array++;
        }
@@ -170,9 +173,41 @@ int logger_task(void)
 tick_t __calculate_tick(struct samplespec * interval)
 {
        int msec;
-       msec = 1000 * (interval->sample_interval.sec) + interval->sample_interval.m_sec;
+       msec = 1000 * (interval->sample_interval.sec) + 
+                      interval->sample_interval.m_sec;
+
        return (tick_t)(msec * TICK_RATE_HZ / 1000 );
 }
+
+/** __log_get_data(): call get_data function inside log_data
+*                     (used for abtraction of log_data internals)
+*   @log:             pointer to log structure
+*
+*   NOTE:             This function check for valid pointer on 'get_data'
+*/
+int __log_get_data(struct log * log)
+{
+      if( !log->data.get_data )
+               return -EINVAL;
+      return log->data.get_data(log->data.buff, log->data.data_len, 
+                                log->data.private_data);
+}
+
+/** __log_save_data(): call to save capture data (resident inside 
+*                      log->data.buf) to sotrage media.
+*
+*   @log:             pointer to log structure
+*/
+int __log_save_data(struct log * log)
+{
+       if( !log->storage_media.save_data)
+               return -EINVAL;
+       return log->storage_media.save_data(&log->data, 
+                                           log->storage_media.storage_data);
+}
+
+
+
 /**  misc_test()
 *    used for log.c interal variable test
 */
@@ -183,7 +218,7 @@ void misc_test(void * parg)
       int i = 0;
       list_for_each(pos, &logger_free_list){
             logger = list_entry(pos, struct logger, l_list);
-            printf("tick = %d , i = %d\n", (int)logger->nr_tick, i++);
+            printf("tick = %d , i = %d\n", (int)logger->nr_ticks, i++);
       }
 
 }
