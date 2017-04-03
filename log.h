@@ -49,7 +49,6 @@ struct  samplespec {
 *   @buff_len:       length of buffer allocated by user in @buff
 *   @data_len:       length of data captured          
 *
-*   TODO: is data_len neccesary?
 */
 struct  log_data {
         char *   buff;
@@ -110,6 +109,14 @@ int    unregister_logger(struct logger *);
 int    logger_task(void);
 struct logger * logger_alloc(void);
 void   logger_free(struct logger *);
+
+/**
+*  simple wrapper around struct logger to initialize it's internals
+*/
+void logger_set_nr_samples(struct logger *, int);
+int  logger_get_nr_samples(struct logger *);
+
+
 
 /**
 *  general MACROs

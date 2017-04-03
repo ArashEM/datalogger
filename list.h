@@ -30,6 +30,7 @@ void list_add_tail(struct list_head *new, struct list_head *head);
 
 void __list_del(struct list_head * prev, struct list_head * next);
 void list_del(struct list_head * entry);
+void list_move(struct list_head *entry, struct list_head * head);
 
 int list_empty(struct list_head * head);
 

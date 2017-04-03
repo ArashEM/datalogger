@@ -34,21 +34,7 @@ LIST_HEAD(logger_zombie_list);
 */  
 int register_logger(struct logger * new)
 {
-    /* CHECKS:
-       in log_data structure:
-         1- check for fptr 'init_capture' and 'get_data'
-         2- check for ptr 'buff'
-       in storage structure:
-         1- check for fptr 'init_media', 'save_data' and 'close_media'
-       in samplespec structure:
-         1- check for none zero 'sample_interval'
-       EXE:
-         1- call init_capture() and check returned value
-         2- call init_media() and check retured value
-         3- calculate tick value based on CPUFreq and sampling_rate
-         4- add 'new' to logger_running_list
-    */
-       /* check for proper initialization */
+       /* check for proper pointer initialization */
        if( (!new->log.data.init_capture) || (!new->log.data.get_data))
                return -EINVAL;
        if( !new->log.data.buff )
@@ -57,8 +43,13 @@ int register_logger(struct logger * new)
            (!new->log.storage_media.save_data)   ||
            (!new->log.storage_media.close_media) )
                return -EINVAL;
+       /* none zero sampling interval */
        if( (!new->log.sampling_rate.sample_interval.sec) &&
            (!new->log.sampling_rate.sample_interval.m_sec))
+               return -EINVAL;
+       /* none zero number of samples. (-1) is for infinite sampling*/
+       if( (new->log.sampling_rate.nr_samples == 0 ) ||
+           (new->log.sampling_rate.nr_samples < -1) )
                return -EINVAL;
        /* initiate tick value. interval of sampling must be at 
           least '1000/TICK_RATE_HZ' */
@@ -157,12 +148,52 @@ void logger_free(struct logger * unused)
        list_add(&unused->l_list, &logger_free_list);
 }
 
-/** logger_task()
-*
+/** logger_task(): Iterate over logger_running_list and do logging
+*                  if counter reach 0
+*   TODO:          SHARED resource access.
 */
 int logger_task(void)
 {
-       return 0;
+       struct logger    * tmp;
+       struct list_head * pos;
+
+       list_for_each(pos, &logger_running_list){
+               tmp = list_entry(pos, struct logger, l_list);
+               
+               /* register_logger checked value of counter before */
+               tmp->counter--;
+               /* is it time to sample? */
+               if(!tmp->counter){
+                       if(__log_get_data(&tmp->log) > 0){
+                       /* successful sampling */
+                               if(__log_save_data(&tmp->log) <= 0)
+                               /* unsuccessfule saving! lost a sample */
+                                         tmp->stat.nr_save_failes++;
+                       }
+                       else{
+                               tmp->stat.nr_get_fails++;
+                       }
+
+                       /* check for nr_samples */
+                       switch(tmp->log.sampling_rate.nr_samples){
+                               case (-1):
+                                       /* infinite sampling */
+                                       tmp->counter = tmp->nr_ticks;
+                                       break;
+                               case (0):
+                                       /* end of sampling */
+                                       /* move from running to zombie list */
+                                       list_move(&tmp->l_list, &logger_zombie_list);
+                                       break;
+                               default:
+                                       /* go on */
+                                       tmp->log.sampling_rate.nr_samples--;
+                                       tmp->counter = tmp->nr_ticks;
+                                       break;
+                       } /* switch(tmp->...) */    
+               } /* if(!tmp->counter) */
+       }/*list_for_each(...) */
+     return 0;
 }
 
 

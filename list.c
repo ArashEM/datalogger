@@ -81,4 +81,16 @@ int list_empty(struct list_head * head)
       return ((head->next == head) && (head->prev == head));
 }
 
+/**
+ * list_move - delete from one list and add as another's head
+ * @list: the entry to move
+ * @head: the head that will precede our entry
+ */
+void list_move(struct list_head *entry, struct list_head * head)
+{
+       list_del(entry);
+       list_add(entry, head);
+} 
+
+
 
