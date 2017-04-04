@@ -88,7 +88,7 @@ struct log {
 struct logger_stat {
        unsigned int nr_get_fails;
        unsigned int nr_save_fails;
-       int (*logger_get_stat)(struct logger_stat * stat);
+       int (*get_stat)(struct logger_stat * stat);
 };
 
 struct logger {
@@ -132,6 +132,7 @@ void   __init_logger_list(struct list_head * list, struct logger * array, int ar
 tick_t __calculate_tick(struct samplespec * interval);
 int    __log_get_data(struct log *);
 int    __log_save_data(struct log *);
+int    __logger_get_stat(struct logger *);
 void   misc_test(void *parg);
 
 #endif

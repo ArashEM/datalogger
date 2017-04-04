@@ -1,15 +1,17 @@
-#ifndef LIST_H
-#define LIST_H
-
-#include <stdlib.h>
-
 /**
 *      double linked list based on linux kernel linked list
 *      code is highly drived form include/linux/list.h
 *      
 *      note: some gcc specific feature like typeof() are 
 *      removed.
+*      Copyright(c):  (2017) Arash Golgol (arash.golgol@gmail.com)
 */
+
+#ifndef LIST_H
+#define LIST_H
+
+#include <stdlib.h>
+
 
 struct list_head {
        struct list_head * next;

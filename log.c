@@ -77,15 +77,6 @@ int register_logger(struct logger * new)
 }
 
 
-void   __init_logger_list(struct list_head * list, struct logger * array, int array_size)
-{
-       int i;
-       for(i=0; i<array_size; i++){
-                array->nr_ticks = (tick_t)i; 
-                list_add(&array->l_list, list);
-                array++;
-       }
-}
 
 /** init_logger()
 *   1- clean logger_array for safety
@@ -201,11 +192,32 @@ int logger_task(void)
 *                         functino all logger in zombie list will move
 *                         to free list
 *
-*
+*  return:                (0) if all zombies statistics are gotten successfully
+*                         each logger which provides it statistics successfully
+*                         is moved to logger_free_list.
+*                         (-EIO) if at least one logger failed in providing 
+*                         stats.
 */
 int logger_zombie_task(void)
 {
-       return 0;
+       struct list_head * pos;
+       struct logger    * tmp;
+       int    ret = 0;
+
+       /* run over zombie_list */
+       list_for_each(pos, &logger_zombie_list)
+       {
+               tmp = list_entry(pos, struct logger, l_list);
+               if(__logger_get_stat(tmp) > 0){
+                       /* getting successfully statistics */
+                       list_move(&tmp->l_list, &logger_free_list);
+               }
+               else {
+                       /* logger will stay in zobmie list because of error */
+                       ret = -EIO;
+               }       
+       } /* list_for_each() */
+       return ret;
 }
 
 /** __calculate_tick(): how many tick must passed between each sampling?
@@ -219,6 +231,22 @@ tick_t __calculate_tick(struct samplespec * interval)
                       interval->sample_interval.m_sec;
 
        return (tick_t)(msec * TICK_RATE_HZ / 1000 );
+}
+
+/** __init_logger_list(): create a linked list from array of logger
+*
+*   @list:                head of linked list
+*   @array:               pointer to array of logger structure
+*   @array_size:          number of element in array
+*/
+void   __init_logger_list(struct list_head * list, struct logger * array, int array_size)
+{
+       int i;
+       for(i=0; i<array_size; i++){
+                array->nr_ticks = (tick_t)i; 
+                list_add(&array->l_list, list);
+                array++;
+       }
 }
 
 /** __log_get_data(): call get_data function inside log_data
@@ -248,7 +276,16 @@ int __log_save_data(struct log * log)
                                            log->storage_media.storage_data);
 }
 
-
+/** __logger_get_stat(): call to process statistics of logger
+*
+*   @logger:             pointer to logger for getting stats.
+*/
+int __logger_get_stat(struct logger * logger)
+{
+       if( !logger->stat.get_stat )
+               return -EINVAL;
+       return logger->stat.get_stat(&logger->stat);
+}
 
 /**  misc_test()
 *    used for log.c interal variable test
