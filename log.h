@@ -87,7 +87,8 @@ struct log {
 
 struct logger_stat {
        unsigned int nr_get_fails;
-       unsigned int nr_save_failes;
+       unsigned int nr_save_fails;
+       int (*logger_get_stat)(struct logger_stat * stat);
 };
 
 struct logger {
@@ -107,6 +108,7 @@ int    init_logger(void);
 int    register_logger(struct logger *);
 int    unregister_logger(struct logger *);
 int    logger_task(void);
+int    logger_zombie_task(void);
 struct logger * logger_alloc(void);
 void   logger_free(struct logger *);
 

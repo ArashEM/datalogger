@@ -168,7 +168,7 @@ int logger_task(void)
                        /* successful sampling */
                                if(__log_save_data(&tmp->log) <= 0)
                                /* unsuccessfule saving! lost a sample */
-                                         tmp->stat.nr_save_failes++;
+                                         tmp->stat.nr_save_fails++;
                        }
                        else{
                                tmp->stat.nr_get_fails++;
@@ -196,6 +196,17 @@ int logger_task(void)
      return 0;
 }
 
+/** logger_zombie_task(): run to get statistics about ended logger 
+*                         which (nr_samples == 0). after calling this
+*                         functino all logger in zombie list will move
+*                         to free list
+*
+*
+*/
+int logger_zombie_task(void)
+{
+       return 0;
+}
 
 /** __calculate_tick(): how many tick must passed between each sampling?
 *
