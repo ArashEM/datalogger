@@ -173,6 +173,8 @@ int logger_task(void)
                                        break;
                                case (0):
                                        /* end of sampling */
+                                       /* close media */
+                                       __log_close_media(&tmp->log);
                                        /* move from running to zombie list */
                                        list_move(&tmp->l_list, &logger_zombie_list);
                                        break;
@@ -273,7 +275,19 @@ int __log_save_data(struct log * log)
        if( !log->storage_media.save_data)
                return -EINVAL;
        return log->storage_media.save_data(&log->data, 
-                                           log->storage_media.storage_data);
+                                            log->storage_media.storage_data);
+}
+
+/** __log_close_media(): call to close saving media
+*
+*   @log:                pointer to log structure
+*/
+int __log_close_media(struct log * log)
+{
+       if( !log->storage_media.close_media)
+               return -EINVAL;
+       return log->storage_media.close_media(&log->data,
+                                              log->storage_media.storage_data);
 }
 
 /** __logger_get_stat(): call to process statistics of logger
