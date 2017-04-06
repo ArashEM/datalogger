@@ -123,7 +123,7 @@ int  logger_get_nr_samples(struct logger *);
 /**
 *  general MACROs
 */
-#define LOG_BUG(x) 
+#define __not_safe             /* simple indicator for thread unsafe functions */
 
 /**
 *   internal functions
