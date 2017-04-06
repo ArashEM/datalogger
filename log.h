@@ -42,20 +42,19 @@ struct  samplespec {
 *   @buff:           pointer to buffer for saving data. User must provide
 *                    enough buffer for data
 *   @private_data:   general pointer to be used for some odd data aqusition!
-*   @init_capture:   initialize data aqusition sub system (e.g ADC, ...)
+*   @init_capture:   initialize data aqusition sub system (e.g ADC, ...). 
+*                    return (0) on sueccess.
 *   @get_data:       abstract all about capturing data and saving it in @buff
 *                    return length of captured data on success (> 0) and (-1) 
 *                    on error.
-*   @buff_len:       length of buffer allocated by user in @buff
-*   @data_len:       length of data captured          
-*
+*   @data_len:       length of data to capture. equal to length of buffer in
+*                    @buff          
 */
 struct  log_data {
         char *   buff;
         void *   private_data;
-        int      (*init_capture)(void * misc);
-        int      (*get_data)(char * buff, size_t len, void * private_data);
-        size_t   buff_len;
+        int      (*init_capture)(struct log_data * data);
+        int      (*get_data)(struct log_data * data);
         size_t   data_len;
         enum data_type type;
 };
@@ -65,9 +64,10 @@ struct  log_data {
 *
 *   @name:              storage name (e.g. "Nand")
 *   @init_media:        initiate media based on it's type (e.g create file
-*                       file on nand flash, connect over network, etc)
+*                       file on nand flash, connect over network, etc). return
+*                       (0) on sueccess.
 *   @save_data:         do the actual saving of data
-*   @close_media:       end saving session of media
+*   @close_media:       end saving session of media. return (0) on success.
 *   @stroage_data:      general pointer for specific storage data (e.g ip addr)
 */
 struct storage {

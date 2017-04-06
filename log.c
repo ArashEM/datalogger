@@ -34,11 +34,12 @@ LIST_HEAD(logger_zombie_list);
 */  
 int register_logger(struct logger * new)
 {
+       /* check for valid pointer */
+       if( !new )
+               return -EINVAL;
        /* check for proper pointer initialization */
        if( (!new->log.data.init_capture) || (!new->log.data.get_data))
                return -EINVAL;
-       if( !new->log.data.buff )
-               return -ENOMEM;
        if( (!new->log.storage_media.init_media)  ||
            (!new->log.storage_media.save_data)   ||
            (!new->log.storage_media.close_media) )
@@ -51,6 +52,9 @@ int register_logger(struct logger * new)
        if( (new->log.sampling_rate.nr_samples == 0 ) ||
            (new->log.sampling_rate.nr_samples < -1) )
                return -EINVAL;
+       /* nr_samples == 0 is itself a sample */
+       if( new->log.sampling_rate.nr_samples != -1)
+               new->log.sampling_rate.nr_samples--;
        /* initiate tick value. interval of sampling must be at 
           least '1000/TICK_RATE_HZ' */
        new->nr_ticks = __calculate_tick(&new->log.sampling_rate);
@@ -61,11 +65,11 @@ int register_logger(struct logger * new)
        new->counter = new->nr_ticks;
 
        /* initiate data capture sub system */
-       if( !new->log.data.init_capture(new->log.data.private_data) )
+       if( new->log.data.init_capture(&new->log.data) )
                return -EIO;
 
        /* initiate media to save data */
-       if( !new->log.storage_media.init_media(new->log.storage_media.storage_data) )
+       if( new->log.storage_media.init_media(new->log.storage_media.storage_data) )
                return -EIO;
 
 
@@ -76,8 +80,24 @@ int register_logger(struct logger * new)
     return 0;
 }
 
+/** unregister_logger(): for to remove a logger from running list
+*
+*   @logger:             pointer to logger to remove
+*   return:              (0) on success
+*/
+int unregister_logger(struct logger * logger)
+{
+       /* check for valid pointer */
+       if( !logger )
+               return -EINVAL;
+       /* finilize media */
+       if( __log_close_media(&logger->log) )
+               return -EIO;
+       /* move to free list */
+       list_move(&logger->l_list, &logger_free_list);
 
-
+       return 0;
+}
 /** init_logger()
 *   1- clean logger_array for safety
 *   2- initialize linked list of logger_free_list
@@ -177,6 +197,9 @@ int logger_task(void)
                                        __log_close_media(&tmp->log);
                                        /* move from running to zombie list */
                                        list_move(&tmp->l_list, &logger_zombie_list);
+                                       /* check for empty list */
+                                       if(list_empty(&logger_running_list))
+                                               return 0;
                                        break;
                                default:
                                        /* go on */
@@ -213,6 +236,9 @@ int logger_zombie_task(void)
                if(__logger_get_stat(tmp) > 0){
                        /* getting successfully statistics */
                        list_move(&tmp->l_list, &logger_free_list);
+                       /* if list becomes empty, return */
+                       if(list_empty(&logger_zombie_list))
+                               return ret;
                }
                else {
                        /* logger will stay in zobmie list because of error */
@@ -245,7 +271,6 @@ void   __init_logger_list(struct list_head * list, struct logger * array, int ar
 {
        int i;
        for(i=0; i<array_size; i++){
-                array->nr_ticks = (tick_t)i; 
                 list_add(&array->l_list, list);
                 array++;
        }
@@ -261,8 +286,7 @@ int __log_get_data(struct log * log)
 {
       if( !log->data.get_data )
                return -EINVAL;
-      return log->data.get_data(log->data.buff, log->data.data_len, 
-                                log->data.private_data);
+      return log->data.get_data(&log->data);
 }
 
 /** __log_save_data(): call to save capture data (resident inside 
@@ -309,7 +333,7 @@ void misc_test(void * parg)
       struct list_head * pos;
       struct logger    * logger;
       int i = 0;
-      list_for_each(pos, &logger_free_list){
+      list_for_each(pos, &logger_running_list){
             logger = list_entry(pos, struct logger, l_list);
             printf("tick = %d , i = %d\n", (int)logger->nr_ticks, i++);
       }
