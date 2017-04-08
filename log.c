@@ -80,7 +80,7 @@ int register_logger(struct logger * new)
     return 0;
 }
 
-/** unregister_logger(): for to remove a logger from running list
+/** unregister_logger(): force to remove a logger from running list
 *
 *   @logger:             pointer to logger to remove
 *   return:              (0) on success
@@ -233,7 +233,7 @@ int logger_zombie_task(void)
        list_for_each(pos, &logger_zombie_list)
        {
                tmp = list_entry(pos, struct logger, l_list);
-               if(__logger_get_stat(tmp) > 0){
+	       if(__logger_get_stat(tmp) > 0){
                        /* getting successfully statistics */
                        list_move(&tmp->l_list, &logger_free_list);
                        /* if list becomes empty, return */
@@ -246,6 +246,30 @@ int logger_zombie_task(void)
                }       
        } /* list_for_each() */
        return ret;
+}
+
+/** nr_free_logger():   return number of logger in logger_free_list
+*
+*/
+unsigned int nr_free_logger(void)
+{
+       return __nr_logger(&logger_free_list);
+}
+
+/** nr_running_logger():   return number of logger in logger_running_list
+*
+*/
+unsigned int nr_running_logger(void)
+{
+       return __nr_logger(&logger_running_list);
+}
+
+/** nr_zombie_logger():   return number of logger in logger_zombie_list
+*
+*/
+unsigned int nr_zombie_logger(void)
+{
+       return __nr_logger(&logger_zombie_list);
 }
 
 /** __calculate_tick(): how many tick must passed between each sampling?
@@ -323,6 +347,21 @@ int __logger_get_stat(struct logger * logger)
        if( !logger->stat.get_stat )
                return -EINVAL;
        return logger->stat.get_stat(&logger->stat);
+}
+
+/** __nr_logger():  calculate number of logger in list
+*
+*  @head:           head of logger list. it MUST be one of running/free/zombie
+*                   list head
+*/
+unsigned int __nr_logger(struct list_head * head)
+{
+       unsigned int nr = 0;
+       struct list_head * pos;
+       list_for_each(pos, head){
+               nr++;
+       }
+       return nr;
 }
 
 /**  misc_test()

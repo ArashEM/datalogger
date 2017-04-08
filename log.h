@@ -84,7 +84,12 @@ struct log {
        struct  storage    storage_media;
 };
 
-
+/** struct logger_stat:  Abtract about run time statistics of specific logger
+*
+*   @nr_get_fails:       How many times get_data() return value (<= 0)
+*   @nr_save_fails:      How many times save_data() return value (<= 0)
+*   @get_sata:           Function pointer to proper statistics analyzer
+*/
 struct logger_stat {
        unsigned int nr_get_fails;
        unsigned int nr_save_fails;
@@ -112,6 +117,10 @@ int    logger_zombie_task(void);
 struct logger * logger_alloc(void);
 void   logger_free(struct logger *);
 
+unsigned int nr_free_logger(void);
+unsigned int nr_running_logger(void);
+unsigned int nr_zombie_logger(void);
+
 /**
 *  simple wrapper around struct logger to initialize it's internals
 */
@@ -134,6 +143,7 @@ int    __log_get_data(struct log *);
 int    __log_save_data(struct log *);
 int    __log_close_media(struct log *);
 int    __logger_get_stat(struct logger *);
+unsigned int __nr_logger(struct list_head *);
 void   misc_test(void *parg);
 
 #endif
