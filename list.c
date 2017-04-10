@@ -92,5 +92,17 @@ void list_move(struct list_head *entry, struct list_head * head)
        list_add(entry, head);
 } 
 
-
-
+/**
+* is_in_list - Check existance of an entry in list
+* @head:       Head of list to check
+* @entry:      Entry to be checked
+*/
+int is_in_list(struct list_head * head, struct list_head * entry)
+{
+       struct list_head * pos;
+       list_for_each(pos, head){
+               if(pos == entry)
+                       return 1;
+       }
+       return 0;
+}

@@ -35,7 +35,7 @@ void list_del(struct list_head * entry);
 void list_move(struct list_head *entry, struct list_head * head);
 
 int list_empty(struct list_head * head);
-
+int is_in_list(struct list_head * head, struct list_head * entry);
 
 #define offsetof(type, member) \
         (size_t)(&(((type *)0)->member) )

@@ -90,6 +90,9 @@ int unregister_logger(struct logger * logger)
        /* check for valid pointer */
        if( !logger )
                return -EINVAL;
+       /* is this logger registered before? */
+       if( !is_in_list(&logger_running_list, &logger->l_list) )
+               return -EINVAL;
        /* finilize media */
        if( __log_close_media(&logger->log) )
                return -EIO;
