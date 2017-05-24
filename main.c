@@ -10,7 +10,7 @@
 
 #include "log.h"
 #include "list.h"
-
+#include "config.h"
 
 /* init_capture() */
 int logger_init_capture(struct log_data * data)
@@ -94,7 +94,7 @@ int main(int argc, char * argv[])
 
 	/* delay for 100ms (10Hz) */
 	tv.tv_sec  = 0;
-	tv.tv_usec = 100000;
+	tv.tv_usec = 1000000/TICK_RATE_HZ;
 
 	while(nr_running_logger() > 0){
 		select(0, NULL, NULL, NULL, &tv);

@@ -157,7 +157,11 @@ void logger_free(struct logger * unused)
 {
        if(!unused)
                return;
-        
+       /* is this logger in running/zombie list ? */
+       if( is_in_list(&logger_running_list, &unused->l_list) )
+               return;
+       if( is_in_list(&logger_zombie_list, &unused->l_list) )
+               return;
        /* add to logger_free_list */
        list_add(&unused->l_list, &logger_free_list);
 }
